@@ -242,6 +242,15 @@ button.secondary-button.play:hover {
     transform: scale(1.0);
 }
 
+button.no-style-button {
+    background: none;
+    box-shadow: none;
+    border: none;
+}
+button.no-style-button:hover {
+    background: var(--bg-primary);  
+}
+
 button, .button {
     background: var(--button-primary-bg);
     background: linear-gradient(180deg, var(--button-primary-bg) 0%, var(--button-alternate-bg) 100%);
