@@ -2,9 +2,8 @@ import { UI } from '../../UI.ts'
 import { ModalDialog } from '../../ModalDialog.ts'
 import { type AnimationClip, type SkinnedMesh } from 'three'
 import { type AnimationLoader } from './AnimationLoader.ts'
-import { NoAnimationsError, IncompatibleSkeletonError, LoadError } from './AnimationImportErrors.ts'
 import CustomAnimationValidation from './CustomAnimationValidation.ts'
-import { AnimationClipMetadata, type TransformedAnimationClipPair } from './interfaces/TransformedAnimationClipPair.ts'
+import { type AnimationClipMetadata, type TransformedAnimationClipPair } from './interfaces/TransformedAnimationClipPair.ts'
 
 /**
  * Handles the importing of custom animations from GLB files.
@@ -139,39 +138,7 @@ export class CustomAnimationImporter extends EventTarget {
 
       return { success: true, clipCount: new_animation_clips.length }
     } catch (error) {
-      return this.handle_import_error(error)
+      return CustomAnimationValidation.handle_import_error(error)
     }
-  }
-
-  private handle_import_error (error: unknown): { success: boolean, clipCount: number } {
-    console.error('Failed to import animations:', error)
-
-    if (error instanceof NoAnimationsError) {
-      new ModalDialog('Import Error', 'No animations found in that glb file').show()
-      return { success: false, clipCount: 0 }
-    }
-
-    if (error instanceof IncompatibleSkeletonError) {
-      const error_message = this.get_bone_validation_error_message(error)
-      new ModalDialog('Import Error', error_message).show()
-      return { success: false, clipCount: 0 }
-    }
-
-    if (error instanceof LoadError) {
-      new ModalDialog('Import Error', 'failed to load the animation file').show()
-      return { success: false, clipCount: 0 }
-    }
-
-    // Unknown error
-    new ModalDialog('Import Error', 'failed to import animations from the glb file').show()
-    return { success: false, clipCount: 0 }
-  }
-
-  private get_bone_validation_error_message (error: IncompatibleSkeletonError): string {
-    if (error.message === 'bone_count_mismatch' || error.message === 'bone count mismatch') {
-      return 'Bone count mismatch'
-    }
-
-    return 'Bone names don\'t match'
   }
 }

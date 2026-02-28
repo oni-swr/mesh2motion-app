@@ -1,5 +1,6 @@
 import { type AnimationClip, type SkinnedMesh } from 'three'
-import { IncompatibleSkeletonError, NoAnimationsError } from './AnimationImportErrors.ts'
+import { IncompatibleSkeletonError, LoadError, NoAnimationsError } from './AnimationImportErrors.ts'
+import { ModalDialog } from '../../ModalDialog.ts'
 
 export default class CustomAnimationValidation {
   /**
@@ -26,18 +27,20 @@ export default class CustomAnimationValidation {
     const animation_bone_names = CustomAnimationValidation.get_animation_bone_names(animation_clips)
 
     if (animation_bone_names.size === 0) {
-      throw new NoAnimationsError('Imported animations do not contain recognizable bone tracks.')
+      throw new NoAnimationsError('We couldn\'t find any animation tracks in this file.')
     }
 
     // Check bone count mismatch
     if (animation_bone_names.size !== target_bone_names.size) {
-      throw new IncompatibleSkeletonError('bone count mismatch')
+      throw new IncompatibleSkeletonError('The Mesh2Motion skeleton has ' + target_bone_names.size +
+        ' bones, but your imported animation rig has ' + animation_bone_names.size + ' bones.')
     }
 
     // Check bone name mismatch (animation has bones not in target skeleton)
     const missing_bones = Array.from(animation_bone_names).filter(bone => !target_bone_names.has(bone))
     if (missing_bones.length > 0) {
-      throw new IncompatibleSkeletonError('bone names don\'t match')
+      throw new IncompatibleSkeletonError('The bone names dont match the Mesh2Motion rig exactly. ' +
+        'The following bones were found in the animation but not in the Mesh2Motion skeleton: ' + missing_bones.join(', '))
     }
   }
 
@@ -72,5 +75,31 @@ export default class CustomAnimationValidation {
     }
 
     return null
+  }
+
+  /***
+   * Shows different error messages when importing custom animations based on the type of error encountered
+   */
+  static handle_import_error (error: unknown): { success: boolean, clipCount: number } {
+    const error_title = 'Error Importing Animation(s)'
+    if (error instanceof NoAnimationsError) {
+      new ModalDialog(error_title, 'No animations found in that glb file').show()
+      return { success: false, clipCount: 0 }
+    }
+
+    // skeleton validation errors
+    if (error instanceof IncompatibleSkeletonError) {
+      new ModalDialog(error_title, error.message).show()
+      return { success: false, clipCount: 0 }
+    }
+
+    if (error instanceof LoadError) {
+      new ModalDialog(error_title, 'failed to load the animation file').show()
+      return { success: false, clipCount: 0 }
+    }
+
+    // Unknown error
+    new ModalDialog(error_title, 'failed to import animations from the glb file for an unknown reason').show()
+    return { success: false, clipCount: 0 }
   }
 }
