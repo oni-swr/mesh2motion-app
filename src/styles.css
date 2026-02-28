@@ -129,7 +129,8 @@ div, p {
 }
 
 #skeleton-toggle {
-
+    padding: 0;
+    margin: 0;
 }
 
 
