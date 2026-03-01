@@ -3,18 +3,24 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "electron-main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "electron:dev": "cross-env NODE_ENV=development electron .",
+    "electron:build": "npm run build && electron-builder"
   },
   "devDependencies": {
     "@types/three": "^0.182.0",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@vitest/coverage-v8": "^2.1.8",
     "@vitest/ui": "^2.1.8",
+    "cross-env": "^10.1.0",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "eslint": "^8.56.0",
     "eslint-config-standard-with-typescript": "^43.0.0",
     "eslint-plugin-import": "^2.29.1",
@@ -32,5 +38,17 @@
     "tippy.js": "^6.3.7",
     "vite-plugin-glsl": "^1.1.2",
     "wrangler": "^4.60.0"
+  },
+  "build": {
+    "appId": "com.mesh2motion.app",
+    "files": [
+      "dist/**/*",
+      "electron-main.js",
+      "electron-preload.cjs",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    }
   }
 }
