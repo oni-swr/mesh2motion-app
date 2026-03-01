@@ -114,7 +114,9 @@ export class Pose {
   }
 
   reset (): this {
-    if (!this.srcPose) { console.log('Pose.reset - No source available for resetting'); return }
+    if (this.srcPose == null) { 
+      console.log('Pose.reset - No source available for resetting'); return this
+    }
 
     for (let i = 0; i < this.joints.length; i++) {
       this.joints[i].local.copy(this.srcPose.joints[i].local)

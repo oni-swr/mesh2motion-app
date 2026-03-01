@@ -1,6 +1,11 @@
-import { Scene, type Group, type Object3DEventMap, type Skeleton, type SkinnedMesh } from 'three'
+import { type Scene, type Group, type Skeleton, type SkinnedMesh } from 'three'
 import { ModalDialog } from '../lib/ModalDialog.ts'
 import { SkeletonType } from '../lib/enums/SkeletonType.ts'
+
+export interface TrackNameParts {
+  bone_name: string
+  property: string
+}
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class RetargetUtils {
@@ -100,5 +105,51 @@ export class RetargetUtils {
    */
   static create_track_name (bone_name: string, property: string): string {
     return `${bone_name}.${property}`
+  }
+
+  /**
+   * Parse a track name to extract bone name and property (e.g., "quaternion", "position", "scale")
+   * Handles various formats like "boneName.property" or ".bones[boneName].property"
+   */
+  static parse_track_name_for_metadata (track_name: string): TrackNameParts | null {
+    // Try format: "boneName.property"
+    const simple_match = track_name.match(/^([^.]+)\.(.+)$/)
+    if (simple_match !== null) {
+      return {
+        bone_name: simple_match[1],
+        property: simple_match[2]
+      }
+    }
+
+    // Try format: ".bones[boneName].property"
+    const bones_match = track_name.match(/\.bones\[([^\]]+)\]\.(.+)$/)
+    if (bones_match !== null) {
+      return {
+        bone_name: bones_match[1],
+        property: bones_match[2]
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Create a reverse mapping: source bone name -> array of target bone names
+   * Useful when original map is target -> source but processing needs source -> targets.
+   */
+  static reverse_bone_mapping (bone_mappings: Map<string, string>): Map<string, string[]> {
+    const reverse_mappings = new Map<string, string[]>()
+    bone_mappings.forEach((source_bone_name, target_bone_name) => {
+      if (!reverse_mappings.has(source_bone_name)) {
+        reverse_mappings.set(source_bone_name, [])
+      }
+
+      const target_list = reverse_mappings.get(source_bone_name)
+      if (target_list !== undefined) {
+        target_list.push(target_bone_name)
+      }
+    })
+
+    return reverse_mappings
   }
 }

@@ -4,20 +4,13 @@ import {
   Skeleton,
   type Bone
 } from 'three'
-import { RetargetUtils } from './RetargetUtils.ts'
+import { RetargetUtils, type TrackNameParts } from './RetargetUtils.ts'
 import { TargetBoneMappingType } from './steps/StepBoneMapping.ts'
 import { SkeletonType } from '../lib/enums/SkeletonType.ts'
 import { Retargeter } from './human-retargeting/Retargeter.ts'
 import { Rig } from './human-retargeting/Rig.ts'
 import { HumanChainConfig } from './human-retargeting/HumanChainConfig.ts'
 
-/**
- * Parsed animation track name containing bone name and property type
- */
-export interface TrackNameParts {
-  bone_name: string
-  property: string
-}
 // AnimationRetargetService - Shared service for retargeting animations from one skeleton to another
 // Used by both RetargetAnimationPreview and RetargetAnimationListing
 export class AnimationRetargetService {
@@ -127,19 +120,22 @@ export class AnimationRetargetService {
     // Besides the above special case, the standard retargeting will just be bone mapping applied
     // Maybe in the future we can do other more advanced things.
 
-    const reverse_mappings = this.reverse_bone_mapping(this.bone_mappings)
+    const reverse_mappings = RetargetUtils.reverse_bone_mapping(this.bone_mappings)
 
     // Process each track in the source animation
     source_clip.tracks.forEach((track) => {
       // Parse the track name to get the bone name and property
       // Track names are typically in format: "boneName.property" or ".bones[boneName].property"
-      const track_parts: TrackNameParts | null = this.parse_track_name_for_metadata(track.name)
+      const track_parts: TrackNameParts | null = RetargetUtils.parse_track_name_for_metadata(track.name)
       if (track_parts === null) {
         return
       }
 
+      const source_bone_name = String(track_parts.bone_name)
+      const track_property = String(track_parts.property)
+
       // Check if this bone is mapped to any target bones
-      const target_bone_names = reverse_mappings.get(track_parts.bone_name)
+      const target_bone_names = reverse_mappings.get(source_bone_name)
       if (target_bone_names === undefined || target_bone_names.length === 0) {
         return // Skip unmapped bones
       }
@@ -147,18 +143,18 @@ export class AnimationRetargetService {
       // Create a track for each target bone this source bone maps to. Will mostly just rename
       // a bone with the mapping
       target_bone_names.forEach((target_bone_name) => {
-        const new_track_name = RetargetUtils.create_track_name(target_bone_name, track_parts.property)
+        const new_track_name = RetargetUtils.create_track_name(target_bone_name, track_property)
         const times_copy = Float32Array.from(track.times as ArrayLike<number>)
         const values_copy = Float32Array.from(track.values as ArrayLike<number>)
 
-        if (track_parts.property === 'quaternion') {
+        if (track_property === 'quaternion') {
           const new_track = new QuaternionKeyframeTrack(new_track_name, times_copy, values_copy)
           new_tracks.push(new_track)
-        } else if (track_parts.property === 'position' || track_parts.property === 'scale') {
+        } else if (track_property === 'position' || track_property === 'scale') {
           const new_track = new VectorKeyframeTrack(new_track_name, times_copy, values_copy)
           new_tracks.push(new_track)
         } else {
-          console.warn('This track contains unsupported property for retargeting:', track_parts.property)
+          console.warn('This track contains unsupported property for retargeting:', track_property)
         }
       })
     })
@@ -335,47 +331,5 @@ export class AnimationRetargetService {
     return bones
   }
 
-  /**
-   * Create a reverse mapping: source bone name -> array of target bone names
-   */
-  private reverse_bone_mapping (bone_mappings: Map<string, string>): Map<string, string[]> {
-    const reverse_mappings = new Map<string, string[]>()
-    bone_mappings.forEach((source_bone_name, target_bone_name) => {
-      if (!reverse_mappings.has(source_bone_name)) {
-        reverse_mappings.set(source_bone_name, [])
-      }
-      const target_list = reverse_mappings.get(source_bone_name)
-      if (target_list !== undefined) {
-        target_list.push(target_bone_name)
-      }
-    })
-    return reverse_mappings
-  }
-
-  /**
-   * Parse a track name to extract bone name and property (e.g., "quaternion", "position", "scale")
-   * Handles various formats like "boneName.property" or ".bones[boneName].property"
-   */
-  private parse_track_name_for_metadata (track_name: string): TrackNameParts | null {
-    // Try format: "boneName.property"
-    const simple_match = track_name.match(/^([^.]+)\.(.+)$/)
-    if (simple_match !== null) {
-      return {
-        bone_name: simple_match[1],
-        property: simple_match[2]
-      }
-    }
-
-    // Try format: ".bones[boneName].property"
-    const bones_match = track_name.match(/\.bones\[([^\]]+)\]\.(.+)$/)
-    if (bones_match !== null) {
-      return {
-        bone_name: bones_match[1],
-        property: bones_match[2]
-      }
-    }
-
-    return null
-  }
   // #endregion
 }
