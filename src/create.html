@@ -265,11 +265,11 @@
                 <hr />
 
                 <!-- controls to change transfrom mode between transform and rotation -->
-                 <div style="display: flex; flex-direction: row;">
+                <!-- View mode between textured mesh and weight painted mesh preview -->
+                <fieldset  style="display: flex; flex-direction: row;">
+                    <span>Preview</span>
 
-                   <!-- View mode between textured mesh and weight painted mesh preview -->
-                    <fieldset>
-                        <span>Preview</span>
+                    <span>
                         <div id="mesh-preview-group" class="toggle">
                         <input id="preview-painted" type="radio" name="mesh-preview-type" value="weight-painted" checked="checked" />
                             <label for="preview-painted">
@@ -279,10 +279,12 @@
                             <label for="preview-textured">
                             <img src="images/icons/display-textured.svg" alt="Textured" width="20" height="20" title="Textured Mesh" />
                             </label>
-    
                         </div>
-                    </fieldset>
-                 </div>
+                    </span>
+
+
+                </fieldset>
+                
 
 
  
@@ -297,10 +299,7 @@
                     <label for="independent-bone-movement">Move Bone Independently</label>
                 </div>
 
-
-                <hr />
-
-                    <!-- Preview plane controls -->
+                <!-- Preview plane controls -->
                 <div id="use-head-weight-correction-container" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
                     <div class="styled-checkbox">
                         <input type="checkbox" id="preview-plane-checkbox" />
