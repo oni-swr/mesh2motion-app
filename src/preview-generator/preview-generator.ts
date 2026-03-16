@@ -230,7 +230,7 @@ const app = new PreviewGenerator()
 // Populate animation file dropdown from central rig config
 const animation_file_dropdown = document.getElementById('animation-file-dropdown') as HTMLSelectElement | null
 if (animation_file_dropdown !== null) {
-  RigConfig.populate_animation_file_select(animation_file_dropdown, '../animations/')
+  RigConfig.populate_animation_file_select(animation_file_dropdown)
 }
 
 // look out for select change

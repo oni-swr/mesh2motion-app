@@ -49,7 +49,8 @@ export class AnimationLoader extends EventTarget {
     skeleton_type: SkeletonType,
     skeleton_scale: number = 1.0
   ): Promise<TransformedAnimationClipPair[]> {
-    const file_paths = RigConfig.get_animation_file_paths(skeleton_type, this.animations_file_path)
+    const configured_animation_files = RigConfig.get_animation_file_paths(skeleton_type)
+    const file_paths = configured_animation_files.map(f => `${this.animations_file_path}${f}`)
 
     if (file_paths.length === 0) {
       throw new Error(`No animation files found for skeleton type: ${skeleton_type}`)
