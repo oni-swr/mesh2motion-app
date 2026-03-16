@@ -130,4 +130,31 @@ export class RigConfig {
       select.appendChild(option)
     }
   }
+
+  /**
+   * Populate a <select> with one <option> per animation file across all rigs.
+   * base_path is prepended to each filename, e.g. '../animations/'.
+   * A placeholder option is always inserted first.
+   */
+  static populate_animation_file_select (select: HTMLSelectElement, base_path: string): void {
+    select.innerHTML = ''
+    const placeholder = document.createElement('option')
+    placeholder.value = ''
+    placeholder.textContent = 'Pick a 3d animation to generate previews'
+    select.appendChild(placeholder)
+    for (const rig of this.all) {
+      for (const file of rig.animation_files) {
+        const option = document.createElement('option')
+        option.value = `${base_path}${file}`
+        // derive a readable label from the filename, e.g. 'human-base-animations.glb' -> 'Human Base Animations'
+        const label = file
+          .replace(/\.glb$/i, '')
+          .split('-')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ')
+        option.textContent = label
+        select.appendChild(option)
+      }
+    }
+  }
 }
